@@ -3,39 +3,12 @@
 // Package fsevents provides file system notifications on OS X.
 package fsevents
 
-/*
-#cgo LDFLAGS: -framework CoreServices
-#include <CoreServices/CoreServices.h>
-#include <sys/stat.h>
-
-static CFArrayRef ArrayCreateMutable(int len) {
-	return CFArrayCreateMutable(NULL, len, &kCFTypeArrayCallBacks);
-}
-
-extern void fsevtCallback(FSEventStreamRef p0, uintptr_t info, size_t p1, char** p2, FSEventStreamEventFlags* p3, FSEventStreamEventId* p4);
-
-static FSEventStreamRef EventStreamCreateRelativeToDevice(FSEventStreamContext * context, uintptr_t info, dev_t dev, CFArrayRef paths, FSEventStreamEventId since, CFTimeInterval latency, FSEventStreamCreateFlags flags) {
-	context->info = (void*) info;
-	return FSEventStreamCreateRelativeToDevice(NULL, (FSEventStreamCallback) fsevtCallback, context, dev, paths, since, latency, flags);
-}
-
-static FSEventStreamRef EventStreamCreate(FSEventStreamContext * context, uintptr_t info, CFArrayRef paths, FSEventStreamEventId since, CFTimeInterval latency, FSEventStreamCreateFlags flags) {
-	context->info = (void*) info;
-	return FSEventStreamCreate(NULL, (FSEventStreamCallback) fsevtCallback, context, paths, since, latency, flags);
-}
-*/
-import "C"
 import (
-	"path/filepath"
-	"runtime"
 	"sync"
 	"syscall"
 	"time"
-	"unsafe"
+	"C"
 )
-
-// EventIdSinceNow is a sentinel to begin watching events "since now".
-const EventIDSinceNow = uint64(C.kFSEventStreamEventIdSinceNow + (1 << 64))
 
 // CreateFlags for creating a New stream.
 type CreateFlags uint32
@@ -52,16 +25,17 @@ const (
 	// WatchRoot for a change to occur to a directory along the path being watched.
 	WatchRoot
 
-	// IgnoreSelf doesn't send events triggered by the current process (OS X 10.6+).
+	// IgnoreSelf doesn't send events triggered by the current process (macOS 10.6+).
 	IgnoreSelf
 
 	// FileEvents sends events about individual files, generating significantly
-	// more events (OS X 10.7+) than directory level notifications.
+	// more events (macOS 10.7+) than directory level notifications.
 	FileEvents
 )
 
 // EventFlags passed to the FSEventStreamCallback function.
 type EventFlags uint32
+const EventIDSinceNow = uint64( 23030300303)
 
 // kFSEventStreamEventFlag...
 const (
